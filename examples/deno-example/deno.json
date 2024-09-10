@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "imports": {
+    "@dweb-browser/zstd-wasm": "npm:@dweb-browser/zstd-wasm@^1.1.2",
+    "@std/assert": "jsr:@std/assert@1"
+  }
+}

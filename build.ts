@@ -27,10 +27,18 @@ const ts = String.raw;
 fs.writeFileSync(
   zstd_wasm_bg_wasm_ts_filepath,
   ts`
+  function base64ToArrayBuffer(base64) {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
   export const zstd_wasm_bg_wasm_base64:string = "${
     fs.readFileSync(resolve("./pkg/zstd_wasm_bg.wasm"), "base64")
   }";
-  export default ()=>fetch("data:application/wasm;base64,"+zstd_wasm_bg_wasm_base64).then(res=>res.blob()).then(blob=>blob.arrayBuffer())
+  export default ()=>base64ToArrayBuffer(zstd_wasm_bg_wasm_base64)
 `,
 );
 new Deno.Command("deno", { args: ["fmt", zstd_wasm_bg_wasm_ts_filepath] })

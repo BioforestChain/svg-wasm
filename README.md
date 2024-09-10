@@ -9,6 +9,7 @@ import init, { compress, decompress } from "@dweb-browser/zstd-wasm";
 import zstd_wasm_url from "@dweb-browser/zstd-wasm/zstd_wasm_bg.wasm?url";
 
 init(zstd_wasm_url).then(() => {
+  /// compress or decompress
   const output = compress(new Uint8Array(100), 10);
   const input = decompress(output);
   console.log(input, output);
@@ -20,9 +21,9 @@ The above method uses `fetch` to download the wasm file. If you don't want to us
 ```ts
 import { compress, decompress, initSync } from "@dweb-browser/zstd-wasm";
 import get_zstd_wasm_binary from "@dweb-browser/zstd-wasm/zstd_wasm_bg_wasm.ts";
-initSync(await get_zstd_wasm_binary()).then(() => {
-  ///...
-});
+initSync(get_zstd_wasm_binary());
+
+/// compress or decompress
 ```
 
 ## how to use in nodejs
@@ -39,9 +40,7 @@ const zstd_wasm_binary = fs.readFileSync(
 
 initSync(zstd_wasm_binary);
 
-const output = compress(new Uint8Array(100), 10);
-const input = decompress(output);
-console.log(input, output);
+/// compress or decompress
 ```
 
 ## how to use in deno
@@ -49,8 +48,9 @@ console.log(input, output);
 ```ts
 import { compress, decompress, initSync } from "@dweb-browser/zstd-wasm";
 import zstd_wasm_binary from "@dweb-browser/zstd-wasm/zstd_wasm_bg_wasm.ts";
-initSync(await get_zstd_wasm_binary());
+initSync(get_zstd_wasm_binary());
 
+/// compress or decompress
 const output = compress(new Uint8Array(100), 10);
 const input = decompress(output);
 console.log(input, output);

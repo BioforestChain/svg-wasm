@@ -1,8 +1,15 @@
-export function add(a: number, b: number): number {
-  return a + b;
+import { compress, decompress, initSync } from "./pkg/zstd_wasm.js";
+import zstd_wasm_binary from "./pkg/zstd_wasm_bg_wasm.js";
+
+export function demo() {
+  initSync(zstd_wasm_binary());
+
+  const input = new Uint8Array(100);
+  const output = compress(input, 10);
+  const input2 = decompress(output);
+  return [input, output, input2] as const;
 }
 
-// Learn more at https://deno.land/manual/examples/module_metadata#concepts
 if (import.meta.main) {
-  console.log("Add 2 + 3 =", add(2, 3));
+  void demo();
 }

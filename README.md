@@ -62,6 +62,7 @@ console.log(input, output);
 1. install [wasm-bindgen]() `cargo install wasm-bindgen-cli`
 1. install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
    `cargo install wasm-pack`
+1. install [tsc](http://npmjs.com/package/typescript) `npm install -g typescript`
 1. install [deno](https://deno.com/)
    ```
    curl -fsSL https://deno.land/install.sh | sh # macos or linux

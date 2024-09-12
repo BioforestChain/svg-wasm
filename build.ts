@@ -2,13 +2,16 @@ import fs from "node:fs";
 import url from "node:url";
 const resolve = (path: string) => url.fileURLToPath(import.meta.resolve(path));
 const package_json_filepath = resolve("./pkg/package.json");
-const version = Deno.args[0] ?? (() => {
-  try {
-    return JSON.parse(fs.readFileSync(package_json_filepath, "utf-8")).version;
-  } catch {
-    return "0.1.0";
-  }
-})();
+const version =
+  Deno.args[0] ??
+  (() => {
+    try {
+      return JSON.parse(fs.readFileSync(package_json_filepath, "utf-8"))
+        .version;
+    } catch {
+      return "0.1.0";
+    }
+  })();
 await new Deno.Command("wasm-pack", {
   args: [
     "build",
@@ -22,10 +25,10 @@ await new Deno.Command("wasm-pack", {
 }).spawn().status;
 
 const packageJson = JSON.parse(fs.readFileSync(package_json_filepath, "utf-8"));
-const zstd_wasm_bg_wasm_ts_filepath = resolve("./pkg/zstd_wasm_bg_wasm.ts");
+const svg_wasm_ts_filepath = resolve("./pkg/svg_wasm.ts");
 const ts = String.raw;
 fs.writeFileSync(
-  zstd_wasm_bg_wasm_ts_filepath,
+  svg_wasm_ts_filepath,
   ts`
   function base64ToArrayBuffer(base64) {
     const binaryString = atob(base64);
@@ -35,41 +38,37 @@ fs.writeFileSync(
     }
     return bytes.buffer;
   }
-  export const zstd_wasm_bg_wasm_base64:string = "${
-    fs.readFileSync(resolve("./pkg/zstd_wasm_bg.wasm"), "base64")
-  }";
-  export default ()=>base64ToArrayBuffer(zstd_wasm_bg_wasm_base64)
-`,
+  export const svg_wasm_base64:string = "${fs.readFileSync(
+    resolve("./pkg/svg_wasm.wasm"),
+    "base64"
+  )}";
+  export default ()=>base64ToArrayBuffer(svg_wasm_base64)
+`
 );
-new Deno.Command("deno", { args: ["fmt", zstd_wasm_bg_wasm_ts_filepath] })
-  .outputSync();
+new Deno.Command("deno", { args: ["fmt", svg_wasm_ts_filepath] }).outputSync();
 new Deno.Command("tsc", {
-  args: [zstd_wasm_bg_wasm_ts_filepath, "-m", "esnext", "-d"],
+  args: [svg_wasm_ts_filepath, "-m", "esnext", "-d"],
 }).outputSync();
-fs.unlinkSync(zstd_wasm_bg_wasm_ts_filepath);
+fs.unlinkSync(svg_wasm_ts_filepath);
 
 Object.assign(packageJson, {
-  files: [
-    ...packageJson.files,
-    "zstd_wasm_bg_wasm.js",
-    "zstd_wasm_bg_wasm.d.ts",
-  ],
+  files: [...packageJson.files, "svg_wasm.js", "svg_wasm.d.ts"],
   version: Deno.args[0] ?? version,
   type: "module",
   exports: {
     ".": {
-      import: "./zstd_wasm.js",
-      types: "./zstd_wasm.d.ts",
+      import: "./svg_wasm.js",
+      types: "./svg_wasm.d.ts",
     },
-    "./zstd_wasm_bg.wasm": "./zstd_wasm_bg.wasm",
-    "./zstd_wasm_bg_wasm.ts": {
-      import: "./zstd_wasm_bg_wasm.js",
-      types: "./zstd_wasm_bg_wasm.d.ts",
+    "./svg_wasm.wasm": "./svg_wasm.wasm",
+    "./svg_wasm.ts": {
+      import: "./svg_wasm.js",
+      types: "./svg_wasm.d.ts",
     },
   },
   repository: {
     type: "git",
-    url: "git://github.com/BioforestChain/zstd-wasm.git",
+    url: "git://github.com/BioforestChain/svg-wasm.git",
   },
   bugs: {
     email: "gaubeebangeel@gmail.com",
@@ -77,7 +76,7 @@ Object.assign(packageJson, {
   },
   author: "Gaubee <gaubeebangeel@gmail.com>",
   license: "MIT",
-  keywords: ["zstd", "compression", "decompression"],
+  keywords: ["svg", "png", "webp"],
 });
 
 fs.writeFileSync(package_json_filepath, JSON.stringify(packageJson, null, 2));

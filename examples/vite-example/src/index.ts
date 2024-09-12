@@ -1,5 +1,5 @@
-import init, { compress, decompress } from "@dweb-browser/zstd-wasm";
-import zstd_wasm_url from "@dweb-browser/zstd-wasm/zstd_wasm_bg.wasm?url";
+import init, { compress, decompress } from "@dweb-browser/svg-wasm";
+import zstd_wasm_url from "@dweb-browser/svg-wasm/svg_wasm.wasm?url";
 
 init(zstd_wasm_url).then(() => {
   const output = compress(new Uint8Array(100), 10);

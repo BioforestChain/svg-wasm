@@ -1,12 +1,12 @@
-# zstd-wasm
+# svg-wasm
 
-build with [zstd-rs](https://github.com/gyscos/zstd-rs)
+SVG Wasm toolkit, including `svg_to_png` and `svg_to_webp`, capable of detecting if an SVG causes a memory overflow.
 
 ## how to use within vite
 
 ```ts
-import init, { compress, decompress } from "@dweb-browser/zstd-wasm";
-import zstd_wasm_url from "@dweb-browser/zstd-wasm/zstd_wasm_bg.wasm?url";
+import init, { compress, decompress } from "@dweb-browser/svg-wasm";
+import zstd_wasm_url from "@dweb-browser/svg-wasm/svg_wasm.wasm?url";
 
 init(zstd_wasm_url).then(() => {
   /// compress or decompress
@@ -19,8 +19,8 @@ init(zstd_wasm_url).then(() => {
 The above method uses `fetch` to download the wasm file. If you don't want to use a network request, you can also directly import the binary, which is stored in base64 within a JS file. The final bundle size will be larger as a result.
 
 ```ts
-import { compress, decompress, initSync } from "@dweb-browser/zstd-wasm";
-import get_zstd_wasm_binary from "@dweb-browser/zstd-wasm/zstd_wasm_bg_wasm.ts";
+import { compress, decompress, initSync } from "@dweb-browser/svg-wasm";
+import get_zstd_wasm_binary from "@dweb-browser/svg-wasm/svg_wasm.ts";
 initSync(get_zstd_wasm_binary());
 
 /// compress or decompress
@@ -31,11 +31,9 @@ initSync(get_zstd_wasm_binary());
 ```ts
 import fs from "node:fs";
 import url from "node:url";
-import { compress, decompress, initSync } from "@dweb-browser/zstd-wasm";
+import { compress, decompress, initSync } from "@dweb-browser/svg-wasm";
 const zstd_wasm_binary = fs.readFileSync(
-  url.fileURLToPath(
-    import.meta.resolve("@dweb-browser/zstd-wasm/zstd_wasm_bg.wasm")
-  )
+  url.fileURLToPath(import.meta.resolve("@dweb-browser/svg-wasm/svg_wasm.wasm"))
 );
 
 initSync(zstd_wasm_binary);
@@ -46,8 +44,8 @@ initSync(zstd_wasm_binary);
 ## how to use in deno
 
 ```ts
-import { compress, decompress, initSync } from "@dweb-browser/zstd-wasm";
-import zstd_wasm_binary from "@dweb-browser/zstd-wasm/zstd_wasm_bg_wasm.ts";
+import { compress, decompress, initSync } from "@dweb-browser/svg-wasm";
+import zstd_wasm_binary from "@dweb-browser/svg-wasm/svg_wasm.ts";
 initSync(get_zstd_wasm_binary());
 
 /// compress or decompress
@@ -58,7 +56,6 @@ console.log(input, output);
 
 ## how to build
 
-1. read https://github.com/gyscos/zstd-rs/wiki/Compile-for-WASM
 1. install [wasm-bindgen]() `cargo install wasm-bindgen-cli`
 1. install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
    `cargo install wasm-pack`

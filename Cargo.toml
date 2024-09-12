@@ -1,6 +1,6 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
-name = "zstd-wasm"
+name = "svg-wasm"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,12 +8,8 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+resvg = "0.43.0"
+webp = "0.3.0"
 wasm-bindgen = "0.2.92"
-zstd = "0.13.1"
-# zstd = "0.13.1"
 
 [features]
-zstd = []
-# [dependencies]
-# zstd = "0.13.1"
-# cargo build --target wasm32-unknown-unknown --no-default-features

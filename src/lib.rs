@@ -1,12 +1,14 @@
+mod test;
+
+use libwebp_sys::*;
 use resvg::{
-    tiny_skia::{self, Pixmap, PremultipliedColorU8},
+    tiny_skia::{self, Pixmap},
     usvg::{self, Options, Transform, Tree},
 };
 use wasm_bindgen::prelude::*;
-use webp::Encoder;
 
 #[wasm_bindgen]
-pub fn svg_to_webp(svg: Vec<u8>, quality: f32) -> Result<Vec<u8>, String> {
+pub fn svg_to_webp(svg: Vec<u8>, quality: i32) -> Result<Vec<u8>, String> {
     let opt = usvg::Options::default();
     let rtree =
         usvg::Tree::from_data(&svg, &opt).map_err(|_| "usvg from_data error".to_string())?;
@@ -18,21 +20,36 @@ pub fn svg_to_webp(svg: Vec<u8>, quality: f32) -> Result<Vec<u8>, String> {
     let mut pixmap =
         tiny_skia::Pixmap::new(width, height).ok_or("create Pixmap error".to_string())?;
 
-    // 如果不需要去除透明度，这段代码可以省略
-    for px in pixmap.pixels_mut() {
-        *px =
-            PremultipliedColorU8::from_rgba(255 - px.red(), 255 - px.green(), 255 - px.blue(), 255)
-                .unwrap();
-    }
+    // 去除透明度
+    // for px in pixmap.pixels_mut() {
+    //     *px =
+    //         PremultipliedColorU8::from_rgba(255 - px.red(), 255 - px.green(), 255 - px.blue(), 255)
+    //             .unwrap();
+    // }
 
     // 渲染 SVG 到 pixmap
     resvg::render(&rtree, usvg::Transform::default(), &mut pixmap.as_mut());
 
     // 编码为 WebP 格式
     let img = pixmap.data();
-    let encoder = Encoder::from_rgba(img, width, height);
-    let encoded_webp = encoder.encode(quality);
+    let encoded_webp = encode_webp(img, width, height, quality);
     Ok(encoded_webp.to_vec())
+}
+
+pub fn encode_webp(input_image: &[u8], width: u32, height: u32, quality: i32) -> Vec<u8> {
+    unsafe {
+        let mut out_buf = std::ptr::null_mut();
+        let stride = width as i32 * 4;
+        let len = WebPEncodeRGBA(
+            input_image.as_ptr(),
+            width as i32,
+            height as i32,
+            stride,
+            quality as f32,
+            &mut out_buf,
+        );
+        std::slice::from_raw_parts(out_buf, len as usize).into()
+    }
 }
 
 #[wasm_bindgen]

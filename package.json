@@ -1,0 +1,13 @@
+{
+  "package": "@dweb-browser/svg-tool",
+  "devDependencies": {
+    "@napi-rs/cli": "^1.0.0"
+  },
+  "napi": {
+    "name": "svg-tool"
+  },
+  "scripts": {
+    "build": "napi build --release",
+    "build:debug": "napi build"
+  }
+}

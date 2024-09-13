@@ -1,11 +1,11 @@
-mod test;
-
 use libwebp_sys::*;
+use napi::bindgen_prelude::*;
+use napi::{Error, Status};
+use napi_derive::napi;
 use resvg::{
     tiny_skia::{self, Pixmap, PremultipliedColorU8},
     usvg::{self, Options, Transform, Tree},
 };
-use wasm_bindgen::prelude::*;
 
 /// `svg_to_webp` svg to webp
 ///
@@ -20,29 +20,37 @@ use wasm_bindgen::prelude::*;
 ///             Err(err) => println!("error:{}", err),
 ///         }
 /// ```
-#[wasm_bindgen]
+#[napi]
 pub fn svg_to_webp(
     svg: Vec<u8>,
     quality: i32,
-    layer_limit_size: Option<f32>,
+    layer_limit_size: Option<f64>,
     remote_alpha: Option<bool>,
 ) -> Result<Vec<u8>, String> {
     let opt = usvg::Options::default();
     let limit_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
     let is_clear_alpha = remote_alpha.unwrap_or(false); // 默认不去除透明
-    let rtree =
-        usvg::Tree::from_data(&svg, &opt).map_err(|_| "usvg from_data error".to_string())?;
+    let rtree = usvg::Tree::from_data(&svg, &opt)
+        .map_err(|_| "usvg from_data error".to_string())
+        .unwrap();
 
     let pixmap_size = rtree.size();
     let width = pixmap_size.width() as u32;
     let height = pixmap_size.height() as u32;
 
-    let mut pixmap =
-        tiny_skia::Pixmap::new(width, height).ok_or("create Pixmap error".to_string())?;
+    let mut pixmap = tiny_skia::Pixmap::new(width, height)
+        .ok_or_else(|| Error::from_reason("create Pixmap error".to_string()))
+        .unwrap();
+
     // 检查图层边界并限制大小
     let bbox = rtree.root().abs_layer_bounding_box();
-    if bbox.width() * bbox.height() > limit_size {
-        return Err("Memory overflow".to_string()); // 如果超过限制，返回空数组
+    let box_size = (bbox.width() * bbox.height()) as f64;
+    // 如果超过限制，报错
+    if box_size > limit_size {
+        return Err(Error::new(
+            Status::ArrayBufferExpected.to_string(),
+            "Memory overflow".to_string(),
+        ));
     }
 
     // 是否去除透明度
@@ -109,13 +117,13 @@ pub fn encode_webp(input_image: &[u8], width: u32, height: u32, quality: i32) ->
 /// The function `svg_to_png` returns a `Result<Vec<u8>, String>`. The `Ok` variant contains a vector of
 /// bytes representing the PNG image data if the conversion is successful. If there is an error during
 /// the conversion process, it returns an `Err` variant containing a `String` with an error message.
-#[wasm_bindgen]
+#[napi]
 pub fn svg_to_png(
     svg_data: Vec<u8>,
     width: u32,
     height: u32,
-    fit_mode: &str,
-    layer_limit_size: f32,
+    fit_mode: String,
+    layer_limit_size: f64,
 ) -> Result<Vec<u8>, String> {
     let mut output_width = width;
     let mut output_height = height;
@@ -164,11 +172,32 @@ pub fn svg_to_png(
 
     // 检查图层边界并限制大小
     let bbox = tree.root().abs_layer_bounding_box();
-    if bbox.width() * bbox.height() > layer_limit_size {
-        return Err("Memory overflow".to_string()); // 如果超过限制，返回空数组
+    let box_size = (bbox.width() * bbox.height()) as f64;
+    if box_size > layer_limit_size {
+        return Err(Error::new(
+            Status::ArrayBufferExpected.to_string(),
+            "Memory overflow".to_string(),
+        ));
     }
 
     // 渲染并编码为 PNG
     resvg::render(&tree, transform, &mut pixmap.as_mut());
     Ok(pixmap.encode_png().unwrap_or_else(|_| vec![]))
+}
+
+#[cfg(test)]
+mod test {
+    use crate::svg_to_webp;
+
+    #[test]
+    fn test_svg_to_webp() {
+        let svg_data = std::fs::read(format!("./examples/test.svg")).unwrap();
+        let webp_data = svg_to_webp(svg_data, 100, Some(5242880.0), None);
+        match webp_data {
+            Ok(data) => {
+                std::fs::write(format!("./examples/test.webp"), data).unwrap();
+            }
+            Err(err) => println!("error:{}", err),
+        }
+    }
 }

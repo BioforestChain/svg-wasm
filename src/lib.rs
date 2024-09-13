@@ -2,14 +2,34 @@ mod test;
 
 use libwebp_sys::*;
 use resvg::{
-    tiny_skia::{self, Pixmap},
+    tiny_skia::{self, Pixmap, PremultipliedColorU8},
     usvg::{self, Options, Transform, Tree},
 };
 use wasm_bindgen::prelude::*;
 
+/// `svg_to_webp` svg to webp
+///
+/// # Examples
+/// ```
+/// let svg_data = std::fs::read(format!("./examples/test.svg")).unwrap();
+/// let webp_data = svg_to_webp(svg_data, 100, Some(5242880.0), None);
+/// match webp_data {
+///             Ok(data) => {
+///                 std::fs::write(format!("./examples/test.webp"), data).unwrap();
+///             }
+///             Err(err) => println!("error:{}", err),
+///         }
+/// ```
 #[wasm_bindgen]
-pub fn svg_to_webp(svg: Vec<u8>, quality: i32) -> Result<Vec<u8>, String> {
+pub fn svg_to_webp(
+    svg: Vec<u8>,
+    quality: i32,
+    layer_limit_size: Option<f32>,
+    remote_alpha: Option<bool>,
+) -> Result<Vec<u8>, String> {
     let opt = usvg::Options::default();
+    let limit_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
+    let is_clear_alpha = remote_alpha.unwrap_or(false); // 默认不去除透明
     let rtree =
         usvg::Tree::from_data(&svg, &opt).map_err(|_| "usvg from_data error".to_string())?;
 
@@ -19,14 +39,24 @@ pub fn svg_to_webp(svg: Vec<u8>, quality: i32) -> Result<Vec<u8>, String> {
 
     let mut pixmap =
         tiny_skia::Pixmap::new(width, height).ok_or("create Pixmap error".to_string())?;
+    // 检查图层边界并限制大小
+    let bbox = rtree.root().abs_layer_bounding_box();
+    if bbox.width() * bbox.height() > limit_size {
+        return Err("Memory overflow".to_string()); // 如果超过限制，返回空数组
+    }
 
-    // 去除透明度
-    // for px in pixmap.pixels_mut() {
-    //     *px =
-    //         PremultipliedColorU8::from_rgba(255 - px.red(), 255 - px.green(), 255 - px.blue(), 255)
-    //             .unwrap();
-    // }
-
+    // 是否去除透明度
+    if is_clear_alpha {
+        for px in pixmap.pixels_mut() {
+            *px = PremultipliedColorU8::from_rgba(
+                255 - px.red(),
+                255 - px.green(),
+                255 - px.blue(),
+                255,
+            )
+            .unwrap();
+        }
+    }
     // 渲染 SVG 到 pixmap
     resvg::render(&rtree, usvg::Transform::default(), &mut pixmap.as_mut());
 
@@ -52,6 +82,33 @@ pub fn encode_webp(input_image: &[u8], width: u32, height: u32, quality: i32) ->
     }
 }
 
+/// `svg_to_webp` takes SVG data along with rendering parameters, adjusts the output size
+/// and scale based on the fit mode, renders the SVG, and encodes the result as a PNG image.
+///
+/// Arguments:
+///
+/// * `svg_data`: The `svg_data` parameter is a vector of bytes representing the SVG image data that you
+/// want to convert to a PNG image.
+/// * `width`: The `width` parameter in the `svg_to_png` function represents the desired width of the
+/// output PNG image. It is used to specify the width in pixels of the PNG image that will be generated
+/// from the input SVG data.
+/// * `height`: The `height` parameter in the `svg_to_png` function represents the desired height of the
+/// output PNG image. It is used to specify the vertical dimension of the image in pixels. This
+/// parameter allows you to control the size of the output image when converting an SVG file to a PNG
+/// format.
+/// * `fit_mode`: The `fit_mode` parameter in the `svg_to_png` function determines how the SVG image
+/// should be fitted into the output dimensions specified by `width` and `height`. It can have two
+/// possible values: Fill and Contain
+/// * `layer_limit_size`: The `layer_limit_size` parameter in the `svg_to_png` function represents the
+/// maximum allowable size in square units for a layer in the SVG image. If the bounding box area of a
+/// layer exceeds this limit during rendering, the function will return an error with the message
+/// "Memory overflow" and an
+///
+/// Returns:
+///
+/// The function `svg_to_png` returns a `Result<Vec<u8>, String>`. The `Ok` variant contains a vector of
+/// bytes representing the PNG image data if the conversion is successful. If there is an error during
+/// the conversion process, it returns an `Err` variant containing a `String` with an error message.
 #[wasm_bindgen]
 pub fn svg_to_png(
     svg_data: Vec<u8>,
@@ -79,11 +136,13 @@ pub fn svg_to_png(
         output_width = pixmap_width;
         output_height = pixmap_height;
     }
+    // 采用填充的方式，图片可能会变形
     if fit_mode == "Fill" {
         let sx = output_width as f32 / pixmap_width as f32;
         let sy = output_height as f32 / pixmap_height as f32;
         transform = transform.post_scale(sx, sy);
     } else if fit_mode == "Contain" {
+        // 采用等比例放大，不会导致图片变形
         let aspect_ratio = pixmap_width as f32 / pixmap_height as f32;
         let output_ratio = output_width as f32 / output_height as f32;
         let sx: f32;

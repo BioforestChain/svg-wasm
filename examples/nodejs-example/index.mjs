@@ -1,4 +1,4 @@
-import { svg_to_webp } from "@dweb-browser/svg-wasm";
+import { initSync, svg_to_webp } from "@dweb-browser/svg-wasm";
 import fs from "node:fs";
 import url from "node:url";
 const svg_wasm_binary = fs.readFileSync(
@@ -7,5 +7,9 @@ const svg_wasm_binary = fs.readFileSync(
   ),
 );
 
-svg_to_webp()
+initSync(svg_wasm_binary)
+
+const svg = fs.readFileSync("../test.svg")
+const webp_data = svg_to_webp(svg, 5242880.0)
+fs.writeFileSync("./test.webp", webp_data)
 

@@ -13,7 +13,7 @@ use wasm_bindgen::prelude::*;
 /// # Examples
 /// ```
 /// let svg_data = std::fs::read(format!("./examples/test.svg")).unwrap();
-/// let webp_data = svg_to_webp(svg_data, 100, Some(5242880.0), None);
+/// let webp_data = svg_to_webp(svg_data, Some(5242880.0), None);
 /// match webp_data {
 ///             Ok(data) => {
 ///                 std::fs::write(format!("./examples/test.webp"), data).unwrap();

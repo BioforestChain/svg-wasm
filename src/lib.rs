@@ -1,8 +1,9 @@
 mod test;
 
+use core::str;
 use image::{DynamicImage, ImageFormat};
 use resvg::{
-    tiny_skia::{self, Pixmap, PremultipliedColorU8},
+    tiny_skia::{self, Pixmap},
     usvg::{self, Options, Transform, Tree},
 };
 use std::io::Cursor;
@@ -54,15 +55,10 @@ pub fn detect_svg_render(svg: Vec<u8>, layer_limit_size: Option<f32>) -> bool {
 ///         }
 /// ```
 #[wasm_bindgen]
-pub fn svg_to_webp(
-    svg: Vec<u8>,
-    layer_limit_size: Option<f32>,
-    remote_alpha: Option<bool>,
-) -> Result<Vec<u8>, String> {
+pub fn svg_to_webp(svg: Vec<u8>) -> Result<Vec<u8>, String> {
     let opt = usvg::Options::default();
-    let limit_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
-    let is_clear_alpha = remote_alpha.unwrap_or(false); // 默认不去除透明
-    let rtree =
+    let max_size = 5242880.0;
+    let mut rtree =
         usvg::Tree::from_data(&svg, &opt).map_err(|_| "usvg from_data error".to_string())?;
 
     let pixmap_size = rtree.size();
@@ -71,23 +67,21 @@ pub fn svg_to_webp(
 
     let mut pixmap =
         tiny_skia::Pixmap::new(width, height).ok_or("create Pixmap error".to_string())?;
-    // 检查图层边界并限制大小
-    let bbox = rtree.root().abs_layer_bounding_box();
-    if bbox.width() * bbox.height() > limit_size {
-        return Err("Memory overflow".to_string()); // 如果超过限制，返回空数组
-    }
 
-    // 是否去除透明度
-    if is_clear_alpha {
-        for px in pixmap.pixels_mut() {
-            *px = PremultipliedColorU8::from_rgba(
-                255 - px.red(),
-                255 - px.green(),
-                255 - px.blue(),
-                255,
-            )
-            .unwrap();
-        }
+    // // 检查图层边界并限制大小
+    let bbox = rtree.root().abs_layer_bounding_box();
+    // 如果超过大小，更改内部渲染逻辑再进行转化
+    if bbox.width() * bbox.height() > max_size {
+        // 将 SVG 数据转换为字符串
+        let svg_str = str::from_utf8(&svg).map_err(|_| "Invalid UTF-8 sequence".to_string())?;
+        // 修改 SVG 字符串中的 filterUnits 属性
+        let new_svg_str = svg_str.replace(
+            r#"filterUnits="objectBoundingBox""#,
+            r#"filterUnits="userSpaceOnUse""#,
+        );
+        // 重新解析修改后的 SVG 数据
+        rtree = Tree::from_data(new_svg_str.as_bytes(), &opt)
+            .map_err(|_| "usvg from_data error after modification".to_string())?;
     }
     // 渲染 SVG 到 pixmap
     resvg::render(&rtree, usvg::Transform::default(), &mut pixmap.as_mut());
@@ -136,7 +130,7 @@ pub fn svg_to_png(
     opt.fontdb_mut().load_system_fonts();
 
     // 解析 SVG 数据
-    let tree = Tree::from_data(&svg_data, &opt).unwrap();
+    let mut tree = Tree::from_data(&svg_data, &opt).unwrap();
     let pixmap_size = tree.size().to_int_size();
     let pixmap_width = pixmap_size.width();
     let pixmap_height = pixmap_size.height();
@@ -174,9 +168,20 @@ pub fn svg_to_png(
 
     // 检查图层边界并限制大小
     let bbox = tree.root().abs_layer_bounding_box();
-    let limit_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
-    if bbox.width() * bbox.height() > limit_size {
-        return Err("Memory overflow".to_string()); // 如果超过限制，返回空数组
+    let max_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
+                                                          // 如果超过大小，更改内部渲染逻辑再进行转化
+    if bbox.width() * bbox.height() > max_size {
+        // 将 SVG 数据转换为字符串
+        let svg_str =
+            str::from_utf8(&svg_data).map_err(|_| "Invalid UTF-8 sequence".to_string())?;
+        // 修改 SVG 字符串中的 filterUnits 属性
+        let new_svg_str = svg_str.replace(
+            r#"filterUnits="objectBoundingBox""#,
+            r#"filterUnits="userSpaceOnUse""#,
+        );
+        // 重新解析修改后的 SVG 数据
+        tree = Tree::from_data(new_svg_str.as_bytes(), &opt)
+            .map_err(|_| "usvg from_data error after modification".to_string())?;
     }
 
     // 渲染并编码为 PNG

@@ -9,9 +9,9 @@ const svg_wasm_binary = fs.readFileSync(
 
 initSync(svg_wasm_binary)
 
-const svg = fs.readFileSync("../test.svg")
-const webp_data = svg_to_webp(svg, 5242880.0)
-fs.writeFileSync("./test.webp", webp_data)
+const svg = fs.readFileSync("../crash.svg")
+const webp_data = svg_to_webp(svg)
+fs.writeFileSync("./crash.webp", webp_data)
 
 console.log("detect_svg_render=>", detect_svg_render(svg, 2))
 

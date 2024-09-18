@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@dweb-browser/svg-wasm": "^0.3.0"
+    "@dweb-browser/svg-wasm": "^0.6.0"
   }
 }

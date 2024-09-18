@@ -18,7 +18,7 @@ console.log("detect_svg_render=>", detect_svg_render(svg, 2));
 
 ```ts
 const svg = fs.readFileSync("../test.svg");
-const webp_data = svg_to_webp(svg, 5242880.0);
+const webp_data = svg_to_webp(svg);
 fs.writeFileSync("./test.webp", webp_data);
 ```
 

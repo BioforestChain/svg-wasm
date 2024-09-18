@@ -1,5 +1,5 @@
 import init, { svg_to_webp } from "@dweb-browser/svg-wasm";
-import svg_wasm_url from "@dweb-browser/svg-wasm/svg_wasm_bg.wasm?url";
+import svg_wasm_url from "@dweb-browser/svg-wasm/svg_wasm.wasm?url";
 
 // 初始化 WebAssembly 模块
 init(svg_wasm_url).then(() => {

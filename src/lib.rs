@@ -8,6 +8,38 @@ use resvg::{
 use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
+/// `detect_svg_render` Check whether the SVG is overflowing
+///
+/// # Examples
+/// ```
+/// let svg_data = std::fs::read(format!("./examples/test.svg")).unwrap();
+/// let bool = detect_svg_render(svg_data, Some(5242880.0));
+/// ```
+#[wasm_bindgen]
+pub fn detect_svg_render(svg: Vec<u8>, layer_limit_size: Option<f32>) -> bool {
+    let opt = usvg::Options::default();
+    let limit_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
+    let rtree = usvg::Tree::from_data(&svg, &opt).map_err(|_| "usvg from_data error".to_string());
+    match rtree {
+        Ok(tree) => {
+            // 检查图层边界并限制大小
+            let bbox = tree.root().abs_layer_bounding_box();
+            // println!("Width: {}", bbox.width());
+            // println!("Height: {}", bbox.height());
+            // println!("Area: {}", bbox.width() * bbox.height());
+            // println!("limit_size:{}", limit_size);
+            if bbox.width() * bbox.height() > limit_size {
+                return false; // 如果超过限制
+            };
+            return true;
+        }
+        Err(e) => {
+            println!("error:{}", e);
+            return false;
+        }
+    }
+}
+
 /// `svg_to_webp` svg to webp
 ///
 /// # Examples
@@ -80,37 +112,20 @@ pub fn svg_to_webp(
 /// `svg_to_webp` takes SVG data along with rendering parameters, adjusts the output size
 /// and scale based on the fit mode, renders the SVG, and encodes the result as a PNG image.
 ///
-/// Arguments:
-///
-/// * `svg_data`: The `svg_data` parameter is a vector of bytes representing the SVG image data that you
-/// want to convert to a PNG image.
-/// * `width`: The `width` parameter in the `svg_to_png` function represents the desired width of the
-/// output PNG image. It is used to specify the width in pixels of the PNG image that will be generated
-/// from the input SVG data.
-/// * `height`: The `height` parameter in the `svg_to_png` function represents the desired height of the
-/// output PNG image. It is used to specify the vertical dimension of the image in pixels. This
-/// parameter allows you to control the size of the output image when converting an SVG file to a PNG
-/// format.
-/// * `fit_mode`: The `fit_mode` parameter in the `svg_to_png` function determines how the SVG image
-/// should be fitted into the output dimensions specified by `width` and `height`. It can have two
-/// possible values: Fill and Contain
-/// * `layer_limit_size`: The `layer_limit_size` parameter in the `svg_to_png` function represents the
-/// maximum allowable size in square units for a layer in the SVG image. If the bounding box area of a
-/// layer exceeds this limit during rendering, the function will return an error with the message
-/// "Memory overflow" and an
-///
-/// Returns:
-///
-/// The function `svg_to_png` returns a `Result<Vec<u8>, String>`. The `Ok` variant contains a vector of
-/// bytes representing the PNG image data if the conversion is successful. If there is an error during
-/// the conversion process, it returns an `Err` variant containing a `String` with an error message.
+/// fit_mode Fill || Contain
+/// # Examples
+/// ```
+/// let svg_data = std::fs::read(format!("./examples/test.svg")).unwrap();
+/// let png_data = svg_to_png(svg_data.clone(),996.0,500.0,Contain,Some(5242880.0));
+// std::fs::write(format!("./output/{name}.contain.png"), png_data).unwrap();
+/// ```
 #[wasm_bindgen]
 pub fn svg_to_png(
     svg_data: Vec<u8>,
     width: u32,
     height: u32,
     fit_mode: &str,
-    layer_limit_size: f32,
+    layer_limit_size: Option<f32>,
 ) -> Result<Vec<u8>, String> {
     let mut output_width = width;
     let mut output_height = height;
@@ -159,7 +174,8 @@ pub fn svg_to_png(
 
     // 检查图层边界并限制大小
     let bbox = tree.root().abs_layer_bounding_box();
-    if bbox.width() * bbox.height() > layer_limit_size {
+    let limit_size = layer_limit_size.unwrap_or(5242880.0); // 默认上限是5mb
+    if bbox.width() * bbox.height() > limit_size {
         return Err("Memory overflow".to_string()); // 如果超过限制，返回空数组
     }
 

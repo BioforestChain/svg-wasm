@@ -60,7 +60,7 @@ Object.assign(packageJson, {
       import: "./svg_wasm.js",
       types: "./svg_wasm.d.ts",
     },
-    "./svg_wasm_bg.wasm": "./svg_wasm_bg.wasm",
+    "./svg_wasm.wasm": "./svg_wasm_bg.wasm",
     "./svg_wasm_bg_wasm.ts": {
       import: "./svg_wasm_bg_wasm.js",
       types: "./svg_wasm_bg_wasm.d.ts",

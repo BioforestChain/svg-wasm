@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-    use crate::svg_to_webp;
+    use crate::{detect_svg_render, svg_to_webp};
 
     #[test]
     fn test_svg_to_webp() {
@@ -12,5 +12,11 @@ mod test {
             }
             Err(err) => println!("error:{}", err),
         }
+    }
+    #[test]
+    fn test_detect_svg_render() {
+        let svg_data = std::fs::read(format!("./examples/crash.svg")).unwrap();
+        let webp_data = detect_svg_render(svg_data, Some(5242880.0));
+        println!("webp_data:{}", webp_data);
     }
 }

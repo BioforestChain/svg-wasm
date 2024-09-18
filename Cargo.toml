@@ -5,11 +5,14 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 resvg = "0.43.0"
-libwebp-sys = { version = "0.10.0", default-features = false, features = [
-  "neon",
-] }
+image = "0.25.2"
 wasm-bindgen = "0.2.92"
+
+
+[profile.release]
+lto = true
+opt-level = 'z'

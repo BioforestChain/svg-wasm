@@ -1,10 +1,11 @@
 mod test;
 
-use libwebp_sys::*;
+use image::{DynamicImage, ImageFormat};
 use resvg::{
     tiny_skia::{self, Pixmap, PremultipliedColorU8},
     usvg::{self, Options, Transform, Tree},
 };
+use std::io::Cursor;
 use wasm_bindgen::prelude::*;
 
 /// `svg_to_webp` svg to webp
@@ -23,7 +24,6 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub fn svg_to_webp(
     svg: Vec<u8>,
-    quality: i32,
     layer_limit_size: Option<f32>,
     remote_alpha: Option<bool>,
 ) -> Result<Vec<u8>, String> {
@@ -59,27 +59,22 @@ pub fn svg_to_webp(
     }
     // 渲染 SVG 到 pixmap
     resvg::render(&rtree, usvg::Transform::default(), &mut pixmap.as_mut());
+    // 将渲染的 Pixmap 转换为 DynamicImage
+    let img = DynamicImage::ImageRgba8(
+        image::RgbaImage::from_raw(pixmap.width(), pixmap.height(), pixmap.take()).unwrap(),
+    );
 
-    // 编码为 WebP 格式
-    let img = pixmap.data();
-    let encoded_webp = encode_webp(img, width, height, quality);
-    Ok(encoded_webp.to_vec())
-}
+    // 创建一个 Cursor 作为内存缓冲区
+    let mut buffer = Cursor::new(Vec::new());
 
-pub fn encode_webp(input_image: &[u8], width: u32, height: u32, quality: i32) -> Vec<u8> {
-    unsafe {
-        let mut out_buf = std::ptr::null_mut();
-        let stride = width as i32 * 4;
-        let len = WebPEncodeRGBA(
-            input_image.as_ptr(),
-            width as i32,
-            height as i32,
-            stride,
-            quality as f32,
-            &mut out_buf,
-        );
-        std::slice::from_raw_parts(out_buf, len as usize).into()
-    }
+    // 将图像编码为 WebP 格式并输出到缓冲区
+    let _ = img.write_to(&mut buffer, ImageFormat::WebP);
+
+    // 返回 WebP 数据的 Vec<u8>
+    let webp_data = buffer.into_inner();
+
+    println!("SVG 转 WebP 成功！");
+    Ok(webp_data)
 }
 
 /// `svg_to_webp` takes SVG data along with rendering parameters, adjusts the output size

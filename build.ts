@@ -25,7 +25,7 @@ await new Deno.Command("wasm-pack", {
 }).spawn().status;
 
 const packageJson = JSON.parse(fs.readFileSync(package_json_filepath, "utf-8"));
-const svg_wasm_ts_filepath = resolve("./pkg/svg_wasm.ts");
+const svg_wasm_ts_filepath = resolve("./pkg/svg_wasm_bg_wasm.ts");
 const ts = String.raw;
 fs.writeFileSync(
   svg_wasm_ts_filepath,
@@ -39,7 +39,7 @@ fs.writeFileSync(
     return bytes.buffer;
   }
   export const svg_wasm_base64:string = "${fs.readFileSync(
-    resolve("./pkg/svg_wasm.wasm"),
+    resolve("./pkg/svg_wasm_bg.wasm"),
     "base64"
   )}";
   export default ()=>base64ToArrayBuffer(svg_wasm_base64)
@@ -60,10 +60,10 @@ Object.assign(packageJson, {
       import: "./svg_wasm.js",
       types: "./svg_wasm.d.ts",
     },
-    "./svg_wasm.wasm": "./svg_wasm.wasm",
-    "./svg_wasm.ts": {
-      import: "./svg_wasm.js",
-      types: "./svg_wasm.d.ts",
+    "./svg_wasm_bg.wasm": "./svg_wasm_bg.wasm",
+    "./svg_wasm_bg_wasm.ts": {
+      import: "./svg_wasm_bg_wasm.js",
+      types: "./svg_wasm_bg_wasm.d.ts",
     },
   },
   repository: {

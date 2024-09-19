@@ -52,7 +52,7 @@ new Deno.Command("tsc", {
 fs.unlinkSync(svg_wasm_ts_filepath);
 
 Object.assign(packageJson, {
-  files: [...packageJson.files, "svg_wasm.js", "svg_wasm.d.ts"],
+  files: [...packageJson.files, "svg_wasm_bg_wasm.js", "svg_wasm_bg_wasm.d.ts"],
   version: Deno.args[0] ?? version,
   type: "module",
   exports: {

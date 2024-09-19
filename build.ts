@@ -72,7 +72,7 @@ Object.assign(packageJson, {
   },
   bugs: {
     email: "gaubeebangeel@gmail.com",
-    url: "https://github.com/BioforestChain/zstd-wasm/issues",
+    url: "https://github.com/BioforestChain/svg-wasm/issues",
   },
   author: "Gaubee <gaubeebangeel@gmail.com>",
   license: "MIT",

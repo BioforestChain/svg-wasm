@@ -35,6 +35,55 @@ const webp_data = svg_to_png(svg, 996.0, 500.0, "Contain", 5242880.0);
 fs.writeFileSync("./test.png", webp_data);
 ```
 
+## import wasm
+
+### how to use within vite
+
+fetch wasm file
+
+Vite will automatically pack the wasm file into the dist/assets folder. On the website, it will download this wasm file using network.
+
+```ts
+import init from "@dweb-browser/svg-wasm";
+import svg_wasm_url from "@dweb-browser/svg-wasm/svg_wasm_bg.wasm?url";
+import { test_svg_to_webp } from "./index.ts";
+init(svg_wasm_url).then(() => {
+  test_svg_to_webp("fetch test");
+});
+
+```
+
+bundle wasm into js with base64 encoding
+
+```ts
+import { initSync } from "@dweb-browser/svg-wasm";
+import get_svg_wasm_binary from "@dweb-browser/svg-wasm/svg_wasm_bg_wasm";
+initSync(get_svg_wasm_binary());
+```
+
+
+## how  to use within node
+
+### commonjs
+
+```js
+const { svg_to_webp } = require("@dweb-browser/svg-wasm");
+```
+
+### esmodule
+
+```mjs
+import { detect_svg_render, initSync, svg_to_webp } from "@dweb-browser/svg-wasm";
+import fs from "node:fs";
+import url from "node:url";
+const svg_wasm_binary = fs.readFileSync(
+  url.fileURLToPath(
+    import.meta.resolve("@dweb-browser/svg-wasm/svg_wasm_bg.wasm"),
+  ),
+);
+initSync({ module: svg_wasm_binary })
+```
+ 
 ## how to build
 
 1. rustup target add wasm32-unknown-unknown

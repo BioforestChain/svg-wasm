@@ -2,14 +2,13 @@
   "name": "nodejs-example",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+     "test": "node --test index.mjs && node --test index.cjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@dweb-browser/svg-wasm": "^0.6.0"
+    "@dweb-browser/svg-wasm": "link:../../pkg/"
   }
 }

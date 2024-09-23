@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,6 @@
     "vite-plugin-wasm-pack": "^0.1.12"
   },
   "dependencies": {
-    "@dweb-browser/svg-wasm": "^0.3.0"
+     "@dweb-browser/svg-wasm": "link:../../pkg"
   }
 }

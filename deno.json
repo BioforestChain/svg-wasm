@@ -3,6 +3,11 @@
     "build": "deno run -A ./scripts/build.ts",
     "pub": "cd pkg && npm publish"
   },
+  "compilerOptions": {
+    "lib": [
+      "deno.window","deno"
+    ]
+  },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.4"
   }

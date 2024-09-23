@@ -18,7 +18,6 @@ export const $ = Object.assign(
         safe_options.cwd = $.cwd;
       }
     }
-    console.log("safe_options.cwd=>",safe_options.cwd)
     const task = new Deno.Command(safe_cmd, {
       cwd: $.cwd,
       ...safe_options

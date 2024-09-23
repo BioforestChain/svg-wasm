@@ -1,8 +1,10 @@
-import init, { svg_to_webp } from "@dweb-browser/svg-wasm";
-import svg_wasm_url from "@dweb-browser/svg-wasm/svg_wasm.wasm?url";
+import { svg_to_webp } from "@dweb-browser/svg-wasm";
 
-// 初始化 WebAssembly 模块
-init(svg_wasm_url).then(() => {
+export const test_svg_to_webp = (title:string) => {
+  const head = document.createElement("h2");
+  head.textContent = title;
+  document.body.append(head)
+
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".svg";
@@ -11,7 +13,7 @@ init(svg_wasm_url).then(() => {
     const file = input.files[0];
 
     const svgBuffer = await file.arrayBuffer();
-    const webp_data = svg_to_webp(new Uint8Array(svgBuffer), 5242880.0);
+    const webp_data = svg_to_webp(new Uint8Array(svgBuffer));
 
     // 创建一个 Blob 并使用 URL.createObjectURL 生成一个下载链接
     const blob = new Blob([webp_data], { type: "image/webp" });
@@ -25,4 +27,4 @@ init(svg_wasm_url).then(() => {
   };
 
   document.body.appendChild(input);
-});
+}

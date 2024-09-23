@@ -3,4 +3,8 @@
 target
 node_modules
 package-lock.json
+pnpm-lock.yaml
 deno.lock
+
+
+dist  

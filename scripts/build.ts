@@ -15,9 +15,11 @@ const version =
     }
   })();
 
-await $("wasm-pack", "build ./ --target web --dev --scope dweb-browser");
+await $("wasm-pack", "build  --target web --dev --scope dweb-browser");
+
 fs.renameSync(resolve("../pkg/svg_wasm.js"), resolve("../pkg/svg_wasm.mjs"));
-await $("wasm-pack", "build ./ --target nodejs --release --scope dweb-browser");
+
+// await $("wasm-pack", "build  --target nodejs --release --scope dweb-browser");
 
 
 const packageJson = JSON.parse(fs.readFileSync(package_json_filepath, "utf-8"));
@@ -26,7 +28,7 @@ const write_svg_wasm_bg_wasm_file = (SVG_WASM_BG_WASM_BASE64: string) => {
   fs.writeFileSync(
     svg_wasm_bg_wasm_ts_filepath,
     fs
-      .readFileSync(resolve("../template/svg_wasm_bg_wasm.ts"), "utf8")
+      .readFileSync(resolve("./template/svg_wasm_bg_wasm.ts"), "utf8")
       .replace("SVG_WASM_BG_WASM_BASE64", SVG_WASM_BG_WASM_BASE64)
   );
 };
@@ -35,8 +37,6 @@ write_svg_wasm_bg_wasm_file(
 );
 
 $.cd(resolve("../pkg"));
-
-await $("pwd","-L");
 
 await $(
   "esbuild",
@@ -50,9 +50,8 @@ await $(
 write_svg_wasm_bg_wasm_file("");
 
 Object.assign(packageJson, {
-  files: [...packageJson.files,"svg_wasm.mjs","svg_wasm_bg_wasm.mjs", "svg_wasm_bg_wasm.js", "svg_wasm_bg_wasm.d.ts"],
+  files: ["svg_wasm.mjs",...packageJson.files,"svg_wasm_bg_wasm.mjs", "svg_wasm_bg_wasm.js", "svg_wasm_bg_wasm.ts"].sort(),
   version: Deno.args[0] ?? version,
-  type: "module",
   exports: {
     ".": {
       import: "./svg_wasm.mjs",
@@ -60,9 +59,14 @@ Object.assign(packageJson, {
       require:"./svg_wasm.js"
     },
     "./svg_wasm_bg.wasm": "./svg_wasm_bg.wasm",
+    "./svg_wasm_bg_wasm.ts": {
+      types: "./svg_wasm_bg_wasm.ts",
+      import: "./svg_wasm_bg_wasm.mjs",
+      require: "./svg_wasm_bg_wasm.js",
+    },
     "./svg_wasm_bg_wasm": {
       import: "./svg_wasm_bg_wasm.mjs",
-      types: "./svg_wasm_bg_wasm.d.ts",
+      types: "./svg_wasm_bg_wasm.ts",
       require:"./svg_wasm_bg_wasm.js"
     },
   },
@@ -71,10 +75,10 @@ Object.assign(packageJson, {
     url: "git://github.com/BioforestChain/svg-wasm.git",
   },
   bugs: {
-    email: "gaubeebangeel@gmail.com",
+    email: "waterbang6@gmail.com",
     url: "https://github.com/BioforestChain/svg-wasm/issues",
   },
-  author: "Gaubee <gaubeebangeel@gmail.com>",
+  author: "waterbang <waterbang6@gmail.com>",
   license: "MIT",
   keywords: ["svg", "png", "webp"],
 });

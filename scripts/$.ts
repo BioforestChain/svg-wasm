@@ -18,7 +18,11 @@ export const $ = Object.assign(
         safe_options.cwd = $.cwd;
       }
     }
-    const task = new Deno.Command(safe_cmd, safe_options);
+    console.log("safe_options.cwd=>",safe_options.cwd)
+    const task = new Deno.Command(safe_cmd, {
+      cwd: $.cwd,
+      ...safe_options
+  });
     const status = await task.spawn().status;
     if (!status.success) {
       console.error(`exec ${command} fail with signal: ${status.signal}`);

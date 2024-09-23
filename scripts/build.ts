@@ -3,7 +3,7 @@ import url from "node:url";
 import { $ } from "./$.ts";
 
 const resolve = (path: string) => url.fileURLToPath(import.meta.resolve(path));
-const package_json_filepath = resolve("./pkg/package.json");
+const package_json_filepath = resolve("../pkg/package.json");
 const version =
   Deno.args[0] ??
   (() => {
@@ -26,14 +26,18 @@ const write_svg_wasm_bg_wasm_file = (SVG_WASM_BG_WASM_BASE64: string) => {
   fs.writeFileSync(
     svg_wasm_bg_wasm_ts_filepath,
     fs
-      .readFileSync(resolve("./template/svg_wasm_bg_wasm.ts"), "utf8")
+      .readFileSync(resolve("../template/svg_wasm_bg_wasm.ts"), "utf8")
       .replace("SVG_WASM_BG_WASM_BASE64", SVG_WASM_BG_WASM_BASE64)
   );
 };
 write_svg_wasm_bg_wasm_file(
   fs.readFileSync(resolve("../pkg/svg_wasm_bg.wasm"), "base64")
 );
+
 $.cd(resolve("../pkg"));
+
+await $("pwd","-L");
+
 await $(
   "esbuild",
   "svg_wasm_bg_wasm.ts --format=esm --outfile=svg_wasm_bg_wasm.mjs"
@@ -42,6 +46,7 @@ await $(
   "esbuild",
   "svg_wasm_bg_wasm.ts --format=cjs --outfile=svg_wasm_bg_wasm.js"
 );
+
 write_svg_wasm_bg_wasm_file("");
 
 Object.assign(packageJson, {
